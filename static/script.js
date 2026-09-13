@@ -687,4 +687,4 @@ window.fecharBannerErro = fecharBannerErro;
 window.navegarPara = navegarPara;
 window.setTheme = setTheme;
 window.limparAlertas = limparAlertas;
-window.limparLogs = limparLogs;
+window.limparLogs = limparLogs;// Revisao do loop de alertas 
