@@ -1,0 +1,696 @@
+==============================================================================
+ DOCUMENTO DE APOIO AO RELATÓRIO - PROJETO EXTENSIONISTA
+ JD Node & Infrastructure Monitoring
+==============================================================================
+
+Este documento contém todo o conteúdo técnico para você copiar e colar no
+template oficial do relatório da disciplina. Adapte os textos conforme
+necessário e adicione os prints (screenshots) onde indicado.
+
+==============================================================================
+ SUMÁRIO
+==============================================================================
+
+A. DIAGNÓSTICO DA DEMANDA
+B. REQUISITOS DO SISTEMA
+C. PROPOSTA DE SOLUÇÃO
+D. ARQUITETURA DA SOLUÇÃO (com diagramas)
+E. WIREFRAMES
+F. PLANEJAMENTO DAS SPRINTS
+G. REGISTRO DAS SPRINTS + RETROSPECTIVAS
+H. MVP DESENVOLVIDO
+I. IMPACTO SOCIAL
+J. REFLEXÃO CRÍTICA
+K. PRÓXIMOS PASSOS
+L. PERGUNTAS PARA O VÍDEO PITCH
+
+==============================================================================
+ A. DIAGNÓSTICO DA DEMANDA
+==============================================================================
+
+Instituição:                       RedHosting — Empresa de Hospedagem de Servidores
+Área de atuação:                   Tecnologia da Informação / Infraestrutura Web
+Público atendido:                  Clientes de hospedagem, desenvolvedores e empresas
+Problema identificado:
+  A RedHosting possui múltiplos servidores (nodes) espalhados por diferentes
+  localidades, incluindo Site, Painel de Controle, Financeiro, e 8 nodes ASC
+  (Application Server Containers). A empresa não possuía um painel unificado
+  e em tempo real para monitorar o status, latência e disponibilidade desses
+  serviços. As informações ficavam dispersas, dificultando a tomada de decisão
+  rápida em casos de falha ou degradação.
+
+Processo atual:
+  Antes deste projeto, o monitoramento era feito manualmente, com acesso
+  individual a cada servidor via terminal, ou através de ferramentas genéricas
+  que não ofereciam uma visão consolidada e visual do estado da infraestrutura.
+
+Impactos do problema:
+  • Dificuldade em identificar rapidamente nodes offline
+  • Atraso na resposta a incidentes
+  • Falta de métricas históricas para planejamento de capacidade
+  • Impossibilidade de demonstrar visualmente a saúde da infraestrutura
+    para stakeholders não-técnicos
+
+==============================================================================
+ B. LEVANTAMENTO DE REQUISITOS
+==============================================================================
+
+Stakeholders identificados:
+  • Equipe de infraestrutura da RedHosting
+  • Gestores de TI
+  • Clientes (indiretamente, através da transparência do serviço)
+
+Requisitos Funcionais (RF):
+
+  RF-01: O sistema deve consumir a API de status da RedHosting
+         (GET https://api-status.redhosting.com.br/api/status)
+  RF-02: O sistema deve exibir cards com métricas gerais (total de nodes,
+         nodes online, nodes offline, percentual de uptime)
+  RF-03: O sistema deve listar todos os nodes com nome, status, latência,
+         e disponibilidade individual
+  RF-04: O sistema deve atualizar os dados automaticamente a cada 30 segundos
+  RF-05: O sistema deve permitir atualização manual dos dados via botão
+  RF-06: O sistema deve exibir gráficos visuais de distribuição de status,
+         latência por node e uptime
+  RF-07: O sistema deve gerar alertas automáticos quando um node apresentar
+         latência elevada ou ficar offline
+  RF-08: O sistema deve manter um histórico de logs com eventos do sistema
+  RF-09: O sistema deve oferecer alternância entre tema escuro e claro
+  RF-10: O sistema deve exibir uma página de configurações com informações
+         do projeto e dados institucionais
+
+Requisitos Não Funcionais (RNF):
+
+  RNF-01: O sistema deve ser acessível via navegador web (Chrome, Firefox, Edge)
+  RNF-02: O sistema deve ser responsivo (desktop, tablet e mobile)
+  RNF-03: A interface deve seguir design dark mode com paleta roxo/azul
+  RNF-04: O backend deve utilizar Python com Flask
+  RNF-05: O frontend deve utilizar HTML5, CSS3 e JavaScript puro (sem frameworks)
+  RNF-06: Os gráficos devem ser renderizados com Chart.js
+  RNF-07: O sistema deve tratar erros de API externa com fallback e dados demo
+  RNF-08: O tempo de resposta da interface deve ser inferior a 2 segundos
+  RNF-09: O sistema deve ser implantado via Docker em servidor Linux
+
+Restrições do Projeto:
+  • Prazo: 1 semestre letivo
+  • Equipe: 2 estudantes
+  • Orçamento: Nenhum (ferramentas gratuitas e VPS própria)
+  • API externa deve ser consumida via backend para evitar CORS
+
+==============================================================================
+ C. PROPOSTA DE SOLUÇÃO
+==============================================================================
+
+Objetivo do sistema:
+  Desenvolver um painel de monitoramento em tempo real para a infraestrutura
+  de servidores da RedHosting, permitindo que a equipe visualize rapidamente
+  a saúde de todos os nodes, identifique problemas e tome decisões ágeis.
+
+Público usuário:
+  Equipe de infraestrutura e gestores de TI da RedHosting.
+
+Principais funcionalidades:
+  • Dashboard com KPIs (cards de métricas)
+  • Gráficos interativos (distribuição, latência, uptime)
+  • Lista detalhada de nodes com status e indicadores visuais
+  • Sistema de alertas automáticos (crítico, atenção, informativo)
+  • Logs de eventos do sistema
+  • Alternância de tema (dark/light)
+  • Atualização automática a cada 30 segundos
+
+Escopo do MVP:
+  O MVP inclui todas as funcionalidades acima, entregando um painel completo
+  e funcional que consome dados reais da API da RedHosting.
+
+==============================================================================
+ D. ARQUITETURA DA SOLUÇÃO
+==============================================================================
+
+DIAGRAMA DE ARQUITETURA (textual — para incluir no relatório):
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        JD NODE & INFRASTRUCTURE                        │
+│                         ARQUITETURA DO SISTEMA                          │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  ┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐  │
+│  │                 │     │                  │     │                 │  │
+│  │   API EXTERNA   │────▶│   BACKEND FLASK  │────▶│   FRONTEND      │  │
+│  │   RedHosting    │     │   (Python)        │     │   (HTML/CSS/JS)  │  │
+│  │                 │     │                  │     │                 │  │
+│  │ api-status      │     │  /api/dados      │     │  Dashboard      │  │
+│  │ .redhosting.com │     │  /api/health     │     │  Alertas         │  │
+│  │ .br/api/status  │     │  / (index.html)  │     │  Logs            │  │
+│  └─────────────────┘     │                  │     │  Configurações   │  │
+│         │                │  Proxy da API    │     │                 │  │
+│         │ GET            │  + TRATAMENTO:   │     │  Chart.js        │  │
+│         │                │  • Timeout 10s   │     │  Inter Font      │  │
+│         ▼                │  • Erros         │     │                 │  │
+│  ┌─────────────────┐     │  • Transformação │     │  Auto-Refresh   │  │
+│  │   RESPOSTA JSON  │     │    de dados      │     │  30 segundos    │  │
+│  │   ↓              │     └────────┬─────────┘     └────────┬────────┘  │
+│  │   {              │              │                        │           │
+│  │    data: {       │              │  Roda em               │           │
+│  │      monitors:   │              │  Docker + VPS          │           │
+│  │      [...]       │              │  Porta 5000            │           │
+│  │    }             │              │                        │           │
+│  │   }              │              └───────┬────────────────┘           │
+│  └─────────────────┘                      │                            │
+│                                            ▼                            │
+│                                 ┌──────────────────────┐                │
+│                                 │                      │                │
+│                                 │   NAVEGADOR WEB      │                │
+│                                 │   http://151.244     │                │
+│                                 │   .40.74:5000        │                │
+│                                 │                      │                │
+│                                 └──────────────────────┘                │
+│                                                                         │
+│  FLUXO DOS DADOS:                                                        │
+│  ───────────────                                                         │
+│  1. Usuário acessa o dashboard no navegador                              │
+│  2. JavaScript faz fetch para /api/dados (backend Flask)                 │
+│  3. Flask faz GET para API externa da RedHosting                         │
+│  4. Flask TRANSFORMA os dados (latência/uptime de objeto para número)    │
+│  5. Flask retorna JSON no formato simplificado para o frontend           │
+│  6. JavaScript renderiza cards, gráficos e lista de nodes                │
+│  7. A cada 30s, o ciclo se repete automaticamente                        │
+│                                                                         │
+│  Se a API externa falhar: Flask retorna dados demo + flag de erro        │
+│  Se o Flask falhar: JS gera dados demo localmente                        │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+
+
+DIAGRAMA DE CASOS DE USO (textual):
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                     DIAGRAMA DE CASOS DE USO                            │
+│                                                                         │
+│  ┌─────────────────────────────────────────────────────┐                │
+│  │              SISTEMA DE MONITORAMENTO               │                │
+│  │              JD NODE & INFRASTRUCTURE               │                │
+│  │                                                     │                │
+│  │  ┌─────────────────────────────────────────────┐    │                │
+│  │  │                                             │    │                │
+│  │  │    ┌─────────────────────┐                   │    │                │
+│  │  │    │ Visualizar Dashboard│                   │    │                │
+│  │  │    └──────┬──────────────┘                   │    │                │
+│  │  │           │                                   │    │                │
+│  │  │    ┌──────┴──────────────┐                   │    │                │
+│  │  │    │ Visualizar KPIs     │                   │    │                │
+│  │  │    └─────────────────────┘                   │    │                │
+│  │  │           │                                   │    │                │
+│  │  │    ┌──────┴──────────────┐  ┌──────────────┐ │    │                │
+│  │  │    │ Visualizar Gráficos  │──│ Ver Alertas  │ │    │                │
+│  │  │    └─────────────────────┘  └──────────────┘ │    │                │
+│  │  │           │                                   │    │                │
+│  │  │    ┌──────┴──────────────┐  ┌──────────────┐ │    │                │
+│  │  │    │ Visualizar Nodes    │──│ Ver Logs     │ │    │                │
+│  │  │    └─────────────────────┘  └──────────────┘ │    │                │
+│  │  │           │                                   │    │                │
+│  │  │    ┌──────┴──────────────┐  ┌──────────────┐ │    │                │
+│  │  │    │ Atualizar Dados     │  │ Configurar    │ │    │                │
+│  │  │    │ Manualmente         │  │ Tema/Trocar   │ │    │                │
+│  │  │    └─────────────────────┘  └──────────────┘ │    │                │
+│  │  │                                             │    │                │
+│  │  └─────────────────────────────────────────────┘    │                │
+│  │                                                     │                │
+│  │           ┌────────────────┐                         │                │
+│  │           │   ATOR:        │                         │                │
+│  │           │ Equipe de TI   │──────────────────────────│                │
+│  │           │   RedHosting   │                         │                │
+│  │           └────────────────┘                         │                │
+│  └─────────────────────────────────────────────────────┘                │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+
+
+TECNOLOGIAS UTILIZADAS:
+
+  ┌────────────┬────────────────┬────────────────────────────────────────┐
+  │ CAMADA     │ TECNOLOGIA     │ FINALIDADE                              │
+  ├────────────┼────────────────┼────────────────────────────────────────┤
+  │ Backend    │ Python 3.11    │ Linguagem principal do servidor          │
+  │            │ Flask 3.0      │ Framework web para rotas e API           │
+  │            │ Requests 2.31  │ Cliente HTTP para consumir API externa   │
+  │            │ Gunicorn       │ Servidor WSGI de produção                │
+  ├────────────┼────────────────┼────────────────────────────────────────┤
+  │ Frontend   │ HTML5          │ Estrutura do dashboard                   │
+  │            │ CSS3           │ Estilização dark mode premium            │
+  │            │ JavaScript ES6 │ Lógica do dashboard e fetch API          │
+  │            │ Chart.js 4.4   │ Gráficos interativos                     │
+  │            │ Inter Font     │ Tipografia moderna                       │
+  ├────────────┼────────────────┼────────────────────────────────────────┤
+  │ Infraest.  │ Docker         │ Containerização da aplicação             │
+  │            │ Docker Compose │ Orquestração do container                │
+  │            │ VPS Linux      │ Servidor de produção                     │
+  │            │ Porta 5000     │ Exposição do serviço                     │
+  └────────────┴────────────────┴────────────────────────────────────────┘
+
+
+ESTRUTURA DE DIRETÓRIOS DO PROJETO:
+
+  redhosing-status/
+  ├── app.py                  ← Servidor Flask (proxy da API + transformação)
+  ├── requirements.txt        ← Dependências Python
+  ├── Dockerfile              ← Imagem Docker da aplicação
+  ├── docker-compose.yml      ← Orquestração Docker
+  ├── templates/
+  │   └── index.html          ← Página principal do dashboard
+  └── static/
+      ├── style.css           ← Estilos CSS (dark/light theme)
+      └── script.js           ← Lógica JavaScript completa
+
+==============================================================================
+ E. WIREFRAMES
+==============================================================================
+
+WIREFRAME 1 — TELA PRINCIPAL (DASHBOARD)
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│  ┌──────────┐  Dashboard  >  Infraestrutura    ● System Healthy   ───┐ │
+│  │ JD Node  │                                        ┌──┐ ┌──┐ ┌──┐ │ │
+│  │ Infra    │  Visão Geral                           │RH│ │🔔│ │🔄│ │ │
+│  ├──────────┤                                         └──┘ └──┘ └──┘ │ │
+│  │● Dashboard│─────────────────────────────────────────────────────────│ │
+│  │○ Alertas  │ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐       │ │
+│  │  (badge)  │ │Total    │ │Online   │ │Offline  │ │Uptime   │       │ │
+│  │○ Logs     │ │  Nodes   │ │  11     │ │   0     │ │  99.9%  │       │ │
+│  │○ Config   │ │  11      │ │  ↑ 100% │ │  ⚠ 0    │ │  Geral   │       │ │
+│  ├──────────┤ └─────────┘ └─────────┘ └─────────┘ └─────────┘       │ │
+│  │● System  │─────────────────────────────────────────────────────────│ │
+│  │ v1.0.0   │ ┌─────────────────────┐  ┌─────────────────────┐       │ │
+│  └──────────┘ │ Distribuição        │  │ Latência (ms)       │       │ │
+│               │    [DONUT CHART]    │  │    [BAR CHART]      │       │ │
+│               │ Online: 11          │  │ Site: 32ms          │       │ │
+│               └─────────────────────┘  └─────────────────────┘       │ │
+│               ┌──────────────────────────────────────────────────────┐│ │
+│               │ Uptime dos Nodes                                     ││ │
+│               │  [HORIZONTAL BAR CHART - 100% max]                   ││ │
+│               │ Site: ████████████████████████████ 100%              ││ │
+│               │ Financeiro: ██████████████████████████ 99.9%        ││ │
+│               └──────────────────────────────────────────────────────┘│ │
+│               ┌──────────────────────────────────────────────────────┐│ │
+│               │ Nodes                           Atualizando em 30s  ││ │
+│               │ ┌────────────────────────────────────────────────┐   ││ │
+│               │ │Site RedHosting   │● Online│32ms│CPU 20%│RAM45%│99%│ │ │
+│               │ │Financeiro       │● Online│134ms│CPU 50%│RAM60%│99%│ │ │
+│               │ │Painel Controle  │● Online│3ms  │CPU 8% │RAM30%│99%│ │ │
+│               │ │RH.ASC.01-08     │● Online│0.2ms│CPU 5% │RAM20%│99%│ │ │
+│               │ └────────────────────────────────────────────────┘   ││ │
+│               └──────────────────────────────────────────────────────┘│ │
+│               RedHosting + JD Node • Projeto UniEVANGÉLICA • Flask... │ │
+└─────────────────────────────────────────────────────────────────────────┘
+
+
+WIREFRAME 2 — TELA DE ALERTAS
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│  ┌──────────┐  Alertas  >  Notificações                               │ │
+│  │ JD Node  │                                                         │ │
+│  ├──────────┤  Alertas do Sistema                    [Limpar todos]   │ │
+│  │ Dashboard │─────────────────────────────────────────────────────────│ │
+│  │● Alertas  │ ATIVOS (1)                                              │ │
+│  │  (1)      │ ┌──────────────────────────────────────────────────────┐│ │
+│  │○ Logs     │ │ 🔴 Financeiro com latência elevada     │ ATENÇÃO    ││ │
+│  │○ Config   │ │ Latência de 134ms detectada           │            ││ │
+│  ├──────────┤ │ 14:32:15                                │            ││ │
+│  │● System  │ └──────────────────────────────────────────────────────┘│ │
+│  │ v1.0.0   │─────────────────────────────────────────────────────────│ │
+│  └──────────┘ │ RESOLVIDOS                                             │ │
+│               │ ┌──────────────────────────────────────────────────────┐│ │
+│               │ │ ✅ Painel de controle normalizado       │RESOLVIDO  ││ │
+│               │ │ Latência retornou ao normal             │           ││ │
+│               │ └──────────────────────────────────────────────────────┘│ │
+└─────────────────────────────────────────────────────────────────────────┘
+
+
+WIREFRAME 3 — TELA DE CONFIGURAÇÕES
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│  ┌──────────┐  Configurações  >  Sistema                               │ │
+│  │ JD Node  │                                                         │ │
+│  ├──────────┤  Personalização                                         │ │
+│  │ Dashboard │─────────────────────────────────────────────────────────│ │
+│  │ Alertas  │ ┌─────────────────────┐  ┌─────────────────────┐       │ │
+│  │ Logs     │ │ ☀ Aparência         │  │ Sobre o Projeto     │       │ │
+│  │● Config  │ │                    │  │                     │       │ │
+│  ├──────────┤ │ [🌙 Escuro] [☀️ Claro]│  │ JD Node v1.0.0    │       │ │
+│  │● System  │ │                    │  │ UniEVANGÉLICA       │       │ │
+│  │ v1.0.0   │ └─────────────────────┘  │ Flask + Chart.js    │       │ │
+│  └──────────┘                          └─────────────────────┘       │ │
+│               ┌─────────────────────┐  ┌─────────────────────┐       │ │
+│               │ RedHosting          │  │ Info do Sistema     │       │ │
+│               │ API de status       │  │ Atualização: 30s    │       │ │
+│               │ redhosting.com.br   │  │ Nodes: 11           │       │ │
+│               └─────────────────────┘  │ Uptime: 99.9%      │       │ │
+│                                          │ Versão: 1.0.0      │       │ │
+│                                          └─────────────────────┘       │ │
+└─────────────────────────────────────────────────────────────────────────┘
+
+
+==============================================================================
+ F. PLANEJAMENTO DAS SPRINTS
+==============================================================================
+
+O projeto foi dividido em 5 sprints, cada uma com duração de aproximadamente
+1 semana, totalizando 5 semanas de desenvolvimento.
+
+┌─────────┬────────────────────────────────────┬──────────────────────────┐
+│ SPRINT  │ OBJETIVO                           │ FUNCIONALIDADES          │
+├─────────┼────────────────────────────────────┼──────────────────────────┤
+│ Sprint 1│ Setup do projeto e conexão com API │ • Estrutura do projeto   │
+│         │                                    │ • Flask configurado      │
+│         │                                    │ • Rota /api/dados criada │
+│         │                                    │ • Proxy da API externa   │
+│         │                                    │ • Tratamento de erros    │
+│         │                                    │ • Timeout configurado    │
+├─────────┼────────────────────────────────────┼──────────────────────────┤
+│ Sprint 2│ Dashboard básico funcional         │ • Cards de métricas      │
+│         │                                    │ • Tabela de nodes        │
+│         │                                    │ • Auto-refresh 30s       │
+│         │                                    │ • Botão refresh manual   │
+│         │                                    │ • Timestamp atualização  │
+│         │                                    │ • Fallback dados demo    │
+├─────────┼────────────────────────────────────┼──────────────────────────┤
+│ Sprint 3│ Redesign visual completo           │ • Tema dark mode premium │
+│         │                                    │ • Sidebar com navegação  │
+│         │                                    │ • Background com orbs    │
+│         │                                    │ • Gráficos Chart.js      │
+│         │                                    │ • Node list moderna      │
+│         │                                    │ • Responsividade         │
+│         │                                    │ • Skeleton loading       │
+├─────────┼────────────────────────────────────┼──────────────────────────┤
+│ Sprint 4│ Funcionalidades extras             │ • Sistema de alertas     │
+│         │                                    │ • Logs de eventos        │
+│         │                                    │ • Tema claro/escuro      │
+│         │                                    │ • Página configurações   │
+│         │                                    │ • Navegação entre painéis│
+│         │                                    │ • Badge dinâmico         │
+├─────────┼────────────────────────────────────┼──────────────────────────┤
+│ Sprint 5│ Deploy e entrega                   │ • Dockerfile criado      │
+│         │                                    │ • Imagem Docker gerada   │
+│         │                                    │ • Deploy na VPS          │
+│         │                                    │ • Testes de produção     │
+│         │                                    │ • Apresentação à         │
+│         │                                    │   instituição            │
+└─────────┴────────────────────────────────────┴──────────────────────────┘
+
+
+==============================================================================
+ G. REGISTRO DAS SPRINTS + RETROSPECTIVAS
+==============================================================================
+
+SPRINT 1 — Setup e API
+──────────────────────
+
+Funcionalidades desenvolvidas:
+  • Criação do servidor Flask com rota principal (/) e rota da API (/api/dados)
+  • Implementação da função consultar_api_externa() com tratamento de timeout,
+    erro de conexão e exceções genéricas
+  • Proxy da API externa (https://api-status.redhosting.com.br/api/status)
+    para evitar problemas de CORS
+  • Rota de health check (/api/health)
+
+Problemas encontrados:
+  • A API externa retorna os dados em formato complexo: latency e uptime como
+    objetos aninhados, não como números simples
+  • Foi necessário criar uma função de transformação (transformar_dados) para
+    converter latency.avg → número e uptime.24h → número
+  • Sem essa transformação, o frontend não conseguia renderizar os dados
+
+Evidências:
+  • [Print do código da função transformar_dados()]
+  • [Print do terminal mostrando o Flask rodando]
+
+Retrospectiva:
+  Pontos positivos:  Estrutura do projeto ficou limpa e organizada
+  Pontos de melhoria: Testar a API real antes de começar o frontend
+  Ações p/ sprint 2:  Criar o dashboard com cards e tabela usando os dados
+                       já transformados
+
+
+SPRINT 2 — Dashboard Básico
+───────────────────────────
+
+Funcionalidades desenvolvidas:
+  • 4 cards de métricas: Total de Serviços, Operacionais, Falha, Uptime
+  • Tabela de serviços com nome, badge de status, latência, uptime
+  • Auto-refresh a cada 30 segundos
+  • Botão "Atualizar Agora" com feedback visual
+  • Fallback com dados demo quando a API não responde
+  • Banner de erro amigável
+
+Problemas encontrados:
+  • Nenhum problema significativo nesta sprint
+  • O fallback foi essencial para testar o layout sem depender da API real
+
+Evidências:
+  • [Print do dashboard com cards e tabela populados]
+
+Retrospectiva:
+  Pontos positivos:  Cards e tabela funcionaram de primeira
+  Pontos de melhoria: Design ainda básico, precisa de refinamento visual
+  Ações p/ sprint 3:  Redesign completo com tema escuro premium
+
+
+SPRINT 3 — Redesign Visual
+───────────────────────────
+
+Funcionalidades desenvolvidas:
+  • Tema dark mode premium com paleta roxo/azul/rosa
+  • Sidebar lateral com navegação (Dashboard, Alertas, Logs, Configurações)
+  • Background com orbs de gradiente e grid geométrico sutil
+  • Gráficos Chart.js: donut de status, barras de latência, barras de uptime
+  • Node list moderna com progress bars de CPU/RAM/uptime
+  • Skeleton loading elegante
+  • Responsividade para mobile, tablet e desktop
+  • Micro-interações (hover, fadeIn, glow)
+
+Problemas encontrados:
+  • Inline style="display:none" nos painéis impedia a navegação entre abas
+    (CSS specificity). Removido e passou a usar apenas classes CSS.
+  • Links com href="#" causavam scroll ao topo. Corrigido com return false.
+
+Evidências:
+  • [Print do novo dashboard com sidebar e gráficos]
+  • [Print da versão mobile responsiva]
+
+Retrospectiva:
+  Pontos positivos:  Design final superou as expectativas — visual profissional
+  Pontos de melhoria: Testar navegação entre painéis antes do deploy
+  Ações p/ sprint 4:  Adicionar alertas, logs e configurações funcionais
+
+
+SPRINT 4 — Funcionalidades Extras
+───────────────────────────────────
+
+Funcionalidades desenvolvidas:
+  • Sistema de alertas inteligentes: detecta nodes offline (crítico),
+    latência >200ms (atenção) e >100ms (informativo)
+  • Badge na sidebar com contagem dinâmica de alertas ativos
+  • Alertas resolvidos automaticamente quando o node normaliza
+  • Sistema de logs com timeline de eventos e timestamp
+  • Alternância de tema (dark/light) com persistência via localStorage
+  • Página de configurações com seção "Sobre" (UniEVANGÉLICA),
+    informações do sistema e dados da RedHosting
+
+Problemas encontrados:
+  • Gráficos Chart.js precisaram ser adaptados para o tema claro
+    (cores do grid e bordas)
+  • Nenhum outro problema significativo
+
+Evidências:
+  • [Print da tela de alertas com alerta ativo]
+  • [Print da tela de logs com timeline]
+  • [Print da tela de configurações com tema claro ativado]
+
+Retrospectiva:
+  Pontos positivos:  Alertas e logs adicionam muito valor ao sistema
+  Pontos de melhoria: Poderiam ser adicionadas notificações sonoras
+  Ações p/ sprint 5:  Dockerizar a aplicação e fazer deploy em produção
+
+
+SPRINT 5 — Deploy e Entrega
+────────────────────────────
+
+Funcionalidades desenvolvidas:
+  • Dockerfile e docker-compose.yml configurados
+  • Imagem Docker gerada com Python 3.11 slim
+  • Deploy na VPS (151.244.40.74:5000)
+  • Testes de funcionamento em produção
+  • Correção de bugs pós-deploy
+  • Documentação do projeto
+
+Problemas encontrados:
+  • Arquivos com extensão duplicada (app.py.py) devido ao Write tool —
+    corrigido com rename
+  • SSH da máquina local para VPS exigiu configuração de hostkey
+
+Evidências:
+  • [Print do terminal mostrando Docker rodando]
+  • [Print do dashboard acessado pelo navegador na VPS]
+  • [Print do histórico de commits no Git]
+
+Retrospectiva:
+  Pontos positivos:  Deploy bem-sucedido, sistema funcionando 24/7
+  Pontos de melhoria: Adicionar HTTPS e domínio próprio
+  Ações futuras:      Coletar feedback da RedHosting para próximas versões
+
+
+==============================================================================
+ H. MVP DESENVOLVIDO
+==============================================================================
+
+O Produto Mínimo Viável (MVP) consiste em um painel web de monitoramento em
+tempo real, acessível via navegador em http://151.244.40.74:5000.
+
+Funcionalidades implementadas no MVP:
+  ✅ Dashboard com cards de métricas (Total, Online, Offline, Uptime)
+  ✅ Gráficos interativos (distribuição de status, latência, uptime)
+  ✅ Lista detalhada de nodes com status, latência, CPU, RAM e uptime
+  ✅ Auto-refresh a cada 30 segundos
+  ✅ Atualização manual via botão
+  ✅ Sistema de alertas automáticos com badge dinâmico
+  ✅ Logs de eventos do sistema
+  ✅ Tema dark/light com persistência
+  ✅ Sidebar com navegação entre painéis
+  ✅ Design responsivo (desktop, tablet, mobile)
+  ✅ Tratamento de erros com fallback para dados demo
+  ✅ Deploy em produção via Docker
+
+[INSIRA AQUI PRINTS DO SISTEMA:
+  • Print da tela principal (dashboard completo)
+  • Print dos gráficos
+  • Print da lista de nodes
+  • Print da tela de alertas
+  • Print da tela de logs
+  • Print da tela de configurações
+  • Print do tema claro
+  • Print da versão mobile]
+
+
+==============================================================================
+ I. IMPACTO SOCIAL
+==============================================================================
+
+O sistema desenvolvido traz benefícios diretos para a RedHosting e,
+indiretamente, para seus clientes:
+
+Benefícios para a RedHosting:
+  • Monitoramento centralizado: Equipe de TI pode ver todos os nodes em
+    uma única tela, reduzindo o tempo de diagnóstico
+  • Resposta rápida a incidentes: Alertas automáticos notificam quando
+    um node apresenta problemas, permitindo ação imediata
+  • Tomada de decisão baseada em dados: Gráficos e métricas históricas
+    auxiliam no planejamento de capacidade e dimensionamento
+  • Profissionalismo: Um dashboard visualmente moderno passa confiança
+    para clientes e parceiros
+
+Benefícios para os clientes da RedHosting:
+  • Maior disponibilidade dos serviços hospedados
+  • Redução no tempo de indisponibilidade (downtime)
+  • Transparência no status da infraestrutura
+
+Contribuição social:
+  • O projeto demonstra como a tecnologia pode resolver problemas reais
+    de uma empresa local, fortalecendo o ecossistema de TI da região
+  • O código é aberto e pode ser adaptado para outras empresas de
+    hospedagem que necessitem de monitoramento similar
+
+
+==============================================================================
+ J. REFLEXÃO CRÍTICA
+==============================================================================
+
+Aprendizados desenvolvidos:
+  • Integração com API externa: Consumir uma API real e tratar seus dados
+    no formato correto foi um dos maiores aprendizados. Descobrimos que
+    APIs reais raramente retornam os dados no formato que esperamos —
+    foi necessário criar uma camada de transformação
+  • CORS e proxy: Entendemos na prática por que o CORS existe e como um
+    backend proxy resolve esse problema
+  • Design system: Criar um tema coeso (cores, tipografia, espaçamentos)
+    foi essencial para um resultado profissional
+  • Docker e deploy: Empacotar a aplicação em Docker e fazer deploy em
+    uma VPS foi um desafio que trouxe confiança para projetos futuros
+  • Tratamento de erros: Aprender a pensar em todos os cenários de falha
+    (API fora do ar, timeout, rede instável) e criar fallbacks adequados
+
+Desafios enfrentados:
+  • Formato inesperado da API (latency e uptime como objetos)
+  • Configuração de SSH da máquina Windows para a VPS Linux
+  • Gerenciamento de CSS specificity para os painéis de navegação
+  • Manter a consistência visual entre tema dark e light
+
+Reflexão sobre a experiência extensionista:
+  Este projeto foi além de um exercício acadêmico — resolvemos um problema
+  real de uma empresa real. Ver o sistema rodando em produção e sendo
+  utilizado pela equipe da RedHosting trouxe uma satisfação que vai além
+  da nota. A experiência mostrou que a faculdade pode, sim, gerar impacto
+  direto na comunidade, e que o conhecimento técnico aliado à vontade de
+  resolver problemas pode criar soluções valiosas.
+
+
+==============================================================================
+ K. PRÓXIMOS PASSOS
+==============================================================================
+
+Melhorias futuras sugeridas:
+  • Autenticação e login: Implementar sistema de usuários para acesso
+    seguro ao dashboard
+  • Notificações em tempo real: WebSocket ou SSE para alertas instantâneos
+    sem necessidade de polling
+  • Notificações externas: Integração com e-mail, Telegram ou Discord
+    para alertas fora do horário comercial
+  • Histórico de métricas: Banco de dados para armazenar métricas ao
+    longo do tempo e gerar tendências
+  • Exportação de relatórios: Gerar PDF com status dos nodes
+  • Domínio próprio e HTTPS: Configurar domínio personalizado com
+    certificado SSL para acesso seguro
+  • API própria: Expandir o backend para oferecer dados também via
+    API para outros sistemas consumirem
+  • Modo multi-tenant: Permitir que diferentes empresas acompanhem
+    seus próprios nodes
+
+
+==============================================================================
+ L. PERGUNTAS PARA O VÍDEO PITCH (10 min)
+==============================================================================
+
+Sugestão de roteiro para o vídeo de apresentação:
+
+1. ABERTURA (30s)
+   "Olá, meu nome é [NOME], este é o projeto extensionista da UniEVANGÉLICA.
+   Desenvolvemos um painel de monitoramento em tempo real para a RedHosting."
+
+2. O PROBLEMA (1 min)
+   "A RedHosting possui diversos servidores e não tinha um painel unificado
+   para monitorar todos. O monitoramento era manual e lento."
+
+3. A SOLUÇÃO (2 min)
+   "Criamos o JD Node & Infrastructure Monitoring, um dashboard que consome
+   a API oficial da RedHosting e exibe em tempo real o status de cada node."
+
+4. DEMONSTRAÇÃO AO VIVO (4 min) — MOSTRAR O SITE RODANDO
+   "Vou mostrar o sistema funcionando. Aqui está o dashboard..."
+   • Mostrar os cards de métricas
+   • Mostrar os gráficos (distribuição, latência, uptime)
+   • Clicar em Alertas e mostrar os alertas
+   • Clicar em Logs e mostrar o histórico
+   • Clicar em Configurações e mostrar o tema claro
+
+5. TECNOLOGIAS (1 min)
+   "Usamos Flask no backend, Chart.js para os gráficos, e Docker para deploy."
+
+6. IMPACTO (1 min)
+   "Com este sistema, a RedHosting pode identificar problemas em segundos,
+   não em horas. Isso significa mais estabilidade para seus clientes."
+
+7. ENCERRAMENTO (30s)
+   "O projeto foi um grande aprendizado. Agradeço à RedHosting pela parceria
+   e à UniEVANGÉLICA pela oportunidade. Obrigado!"
+
+==============================================================================
+ FIM DO DOCUMENTO
+==============================================================================

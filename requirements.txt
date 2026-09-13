@@ -1,0 +1,13 @@
+# ============================================================================
+# requirements.txt - Dependências do Projeto RedHosting Dashboard
+# ============================================================================
+# Instale com: pip install -r requirements.txt
+# ============================================================================
+
+# Flask - Microframework web para Python
+# Usado para criar o servidor backend que faz proxy da API externa
+Flask>=3.0.0
+
+# Requests - Biblioteca HTTP para Python
+# Usado para fazer a requisição GET à API de status da RedHosting
+requests>=2.31.0

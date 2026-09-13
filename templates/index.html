@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="JD Node & Infrastructure Monitoring — Painel de Monitoramento" />
+    <title>JD Node — Infrastructure Monitoring</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⬡</text></svg>" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+    <!-- Background FX -->
+    <div class="bg-layer">
+        <div class="bg-orb bg-orb-1"></div>
+        <div class="bg-orb bg-orb-2"></div>
+        <div class="bg-orb bg-orb-3"></div>
+        <div class="bg-grid"></div>
+    </div>
+
+    <!-- =============================== SIDEBAR =============================== -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+        <div class="sidebar-inner">
+            <!-- Logo -->
+            <div class="sidebar-logo">
+                <div class="logo-icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <rect x="2" y="2" width="20" height="8" rx="2" />
+                        <rect x="2" y="14" width="20" height="8" rx="2" />
+                        <circle cx="6" cy="6" r="1.5" fill="currentColor" />
+                        <circle cx="6" cy="18" r="1.5" fill="currentColor" />
+                    </svg>
+                </div>
+                <div class="logo-text">
+                    <span class="logo-title">JD Node</span>
+                    <span class="logo-subtitle">Infrastructure Monitoring</span>
+                </div>
+            </div>
+
+            <!-- Navegação -->
+            <div class="nav-label">Menu</div>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-page="dashboard" onclick="navegarPara('dashboard');return false">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
+                        <rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
+                    </svg>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-page="alertas" onclick="navegarPara('alertas');return false">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                    </svg>
+                    <span>Alertas</span>
+                    <span class="nav-badge" id="alertBadge">0</span>
+                </a>
+                <a href="#" class="nav-item" data-page="logs" onclick="navegarPara('logs');return false">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                        <line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" />
+                    </svg>
+                    <span>Logs</span>
+                </a>
+            </nav>
+
+            <div class="nav-label" style="margin-top:auto;padding-top:16px;">Sistema</div>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item" data-page="configuracoes" onclick="navegarPara('configuracoes');return false">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <circle cx="12" cy="12" r="3" />
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                    </svg>
+                    <span>Configurações</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="sidebar-status">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Sistema operacional</span>
+                </div>
+                <div class="sidebar-version">v1.0.0</div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- =============================== MAIN =============================== -->
+    <main class="main-content" id="mainContent">
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+        </button>
+
+        <!-- Header -->
+        <header class="main-header">
+            <div class="header-left">
+                <div class="header-breadcrumb" id="breadcrumb">
+                    <span class="breadcrumb-item">Dashboard</span>
+                    <span class="breadcrumb-sep">/</span>
+                    <span class="breadcrumb-current">Infraestrutura</span>
+                </div>
+                <h1 class="header-page-title" id="headerTitle">Visão Geral</h1>
+            </div>
+            <div class="header-right">
+                <div class="header-system-status" id="systemStatus">
+                    <span class="status-indicator status-healthy"></span>
+                    <span class="status-label">System Healthy</span>
+                </div>
+                <div class="header-last-update" id="lastUpdate">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+                    </svg>
+                    <span id="updateTime">—</span>
+                </div>
+                <button class="header-btn" id="btnRefresh" onclick="carregarDados()" title="Atualizar agora">
+                    <svg class="refresh-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <polyline points="23 4 23 10 17 10" /><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                    </svg>
+                </button>
+                <div class="header-avatar"><span class="avatar-text">JD</span></div>
+            </div>
+        </header>
+
+        <!-- =============================== CONTEÚDO =============================== -->
+
+        <!-- === DASHBOARD === -->
+        <div class="dashboard-content page-panel active" id="panel-dashboard">
+            <div class="skeleton-loader" id="skeletonLoader">
+                <div class="sk-cards"><div class="sk-card"></div><div class="sk-card"></div><div class="sk-card"></div><div class="sk-card"></div></div>
+                <div class="sk-charts"><div class="sk-chart"></div><div class="sk-chart"></div></div>
+                <div class="sk-table"><div class="sk-row"></div><div class="sk-row"></div><div class="sk-row"></div><div class="sk-row"></div></div>
+            </div>
+            <div class="dashboard-real" id="dashboardReal" style="display:none;">
+
+                <!-- KPI Cards -->
+                <section class="kpi-grid" id="metricsGrid">
+                    <article class="kpi-card" id="card-total">
+                        <div class="kpi-header">
+                            <span class="kpi-label">Total de Nodes</span>
+                            <div class="kpi-icon-box"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="20" height="8" rx="2" /><rect x="2" y="14" width="20" height="8" rx="2" /></svg></div>
+                        </div>
+                        <div class="kpi-value" id="totalServicos">—</div>
+                        <div class="kpi-trend"><span class="trend-dot"></span><span id="totalTrend">Nodes ativos</span></div>
+                    </article>
+                    <article class="kpi-card" id="card-operational">
+                        <div class="kpi-header">
+                            <span class="kpi-label">Online</span>
+                            <div class="kpi-icon-box kpi-icon-green"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+                        </div>
+                        <div class="kpi-value kpi-value-green" id="servicosOperacionais">—</div>
+                        <div class="kpi-trend kpi-trend-up"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg><span>Operacional</span></div>
+                    </article>
+                    <article class="kpi-card" id="card-failed">
+                        <div class="kpi-header">
+                            <span class="kpi-label">Offline / Falha</span>
+                            <div class="kpi-icon-box kpi-icon-red"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
+                        </div>
+                        <div class="kpi-value kpi-value-red" id="servicosComFalha">—</div>
+                        <div class="kpi-trend kpi-trend-down"><span>Nodes com problemas</span></div>
+                    </article>
+                    <article class="kpi-card kpi-card-accent" id="card-uptime">
+                        <div class="kpi-header">
+                            <span class="kpi-label">Disponibilidade</span>
+                            <div class="kpi-icon-box kpi-icon-purple"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20V10"/><path d="M18 20V5"/><path d="M6 20v-4"/></svg></div>
+                        </div>
+                        <div class="kpi-value kpi-value-purple" id="uptimePercentual">—</div>
+                        <div class="kpi-trend"><span>Uptime geral</span></div>
+                    </article>
+                </section>
+
+                <!-- Charts -->
+                <section class="charts-grid" id="chartsSection">
+                    <div class="chart-card" id="chartStatus">
+                        <div class="chart-header"><h3 class="chart-title">Distribuição de Status</h3><span class="chart-subtitle">Nodes por estado</span></div>
+                        <div class="chart-body"><canvas id="chartStatusCanvas"></canvas></div>
+                    </div>
+                    <div class="chart-card" id="chartLatency">
+                        <div class="chart-header"><h3 class="chart-title">Latência por Node</h3><span class="chart-subtitle">ms — última verificação</span></div>
+                        <div class="chart-body"><canvas id="chartLatencyCanvas"></canvas></div>
+                    </div>
+                    <div class="chart-card chart-card-wide" id="chartUptime">
+                        <div class="chart-header"><h3 class="chart-title">Uptime dos Nodes</h3><span class="chart-subtitle">Percentual nas últimas 24h</span></div>
+                        <div class="chart-body"><canvas id="chartUptimeCanvas"></canvas></div>
+                    </div>
+                </section>
+
+                <!-- Node List -->
+                <section class="nodes-section" id="servicesSection">
+                    <div class="nodes-header">
+                        <div class="nodes-header-left"><h2 class="nodes-title">Nodes</h2><span class="nodes-count" id="nodesCount">—</span></div>
+                        <div class="nodes-header-right">
+                            <div class="auto-refresh-indicator">
+                                <span class="refresh-pulse"></span>
+                                <span id="autoRefreshLabel">Atualizando em 30s</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="nodes-list" id="servicesBody">
+                        <div class="node-row node-row-loading" id="loadingRow">
+                            <div class="loading-spinner"></div>
+                            <span>Carregando dados...</span>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- === ALERTAS === -->
+        <div class="dashboard-content page-panel" id="panel-alertas">
+            <div class="panel-header">
+                <div>
+                    <h2 class="panel-title">Alertas</h2>
+                    <p class="panel-subtitle">Notificações e eventos críticos da infraestrutura</p>
+                </div>
+                <button class="panel-action-btn" onclick="limparAlertas()">Limpar todos</button>
+            </div>
+            <div class="alerts-container" id="alertsList">
+                <div class="alerts-empty">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                    <span>Nenhum alerta no momento. O sistema está saudável.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- === LOGS === -->
+        <div class="dashboard-content page-panel" id="panel-logs">
+            <div class="panel-header">
+                <div>
+                    <h2 class="panel-title">Logs</h2>
+                    <p class="panel-subtitle">Histórico de eventos e verificações do sistema</p>
+                </div>
+                <button class="panel-action-btn" onclick="limparLogs()">Limpar logs</button>
+            </div>
+            <div class="logs-container" id="logsList">
+                <div class="logs-empty">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    <span>Nenhum log registrado ainda.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- === CONFIGURAÇÕES === -->
+        <div class="dashboard-content page-panel" id="panel-configuracoes">
+            <div class="panel-header">
+                <div>
+                    <h2 class="panel-title">Configurações</h2>
+                    <p class="panel-subtitle">Personalize sua experiência</p>
+                </div>
+            </div>
+
+            <div class="settings-grid">
+                <!-- Tema -->
+                <div class="settings-card">
+                    <div class="settings-card-header">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                            <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                        </svg>
+                        <h3>Aparência</h3>
+                    </div>
+                    <p class="settings-desc">Alternar entre tema escuro e claro</p>
+                    <div class="theme-toggle-wrapper">
+                        <button class="theme-btn theme-btn-dark active" id="themeDarkBtn" onclick="setTheme('dark')">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                            Escuro
+                        </button>
+                        <button class="theme-btn theme-btn-light" id="themeLightBtn" onclick="setTheme('light')">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
+                            Claro
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Sobre -->
+                <div class="settings-card settings-card-about">
+                    <div class="settings-card-header">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+                        </svg>
+                        <h3>Sobre o Projeto</h3>
+                    </div>
+                    <div class="about-content">
+                        <div class="about-logo">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="2" y="2" width="20" height="8" rx="2" /><rect x="2" y="14" width="20" height="8" rx="2" /><circle cx="6" cy="6" r="1.5" fill="currentColor" /><circle cx="6" cy="18" r="1.5" fill="currentColor" /></svg>
+                            <div>
+                                <strong>JD Node & Infrastructure Monitoring</strong>
+                                <span>v2.1.0</span>
+                            </div>
+                        </div>
+                        <p class="about-text">
+                            Projeto Extensionista desenvolvido por <strong>2 estudantes</strong> da
+                            <strong>UniEVANGÉLICA</strong> — Centro Universitário de Ceres.
+                        </p>
+                        <p class="about-text">
+                            Este painel monitora em tempo real a infraestrutura de servidores da
+                            <strong>RedHosting</strong>, consumindo dados da API oficial de status
+                            e exibindo métricas como latência, uptime, CPU/RAM e disponibilidade geral.
+                        </p>
+                        <div class="about-tech">
+                            <span class="about-tech-badge">Flask</span>
+                            <span class="about-tech-badge">Chart.js</span>
+                            <span class="about-tech-badge">Inter Font</span>
+                            <span class="about-tech-badge">Docker</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RedHosting -->
+                <div class="settings-card">
+                    <div class="settings-card-header">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                        </svg>
+                        <h3>RedHosting</h3>
+                    </div>
+                    <p class="settings-desc">Dados consumidos da API oficial de status</p>
+                    <div class="about-tech" style="margin-top:8px;">
+                        <span class="about-tech-badge">api-status.redhosting.com.br</span>
+                    </div>
+                    <p class="settings-desc" style="margin-top:12px;font-size:0.78rem;">
+                        Projeto integrado ao ecossistema RedHosting para monitoramento contínuo
+                        de infraestrutura e serviços de hospedagem.
+                    </p>
+                </div>
+
+                <!-- Informações do Sistema -->
+                <div class="settings-card">
+                    <div class="settings-card-header">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        <h3>Informações do Sistema</h3>
+                    </div>
+                    <div class="sysinfo-grid">
+                        <div class="sysinfo-item"><span class="sysinfo-label">Atualização</span><span class="sysinfo-value">30 segundos</span></div>
+                        <div class="sysinfo-item"><span class="sysinfo-label">Nodes monitorados</span><span class="sysinfo-value" id="sysinfoNodes">—</span></div>
+                        <div class="sysinfo-item"><span class="sysinfo-label">Uptime médio</span><span class="sysinfo-value" id="sysinfoUptime">—</span></div>
+                        <div class="sysinfo-item"><span class="sysinfo-label">Versão</span><span class="sysinfo-value">2.1.0</span></div>
+                        <div class="sysinfo-item"><span class="sysinfo-label">Status</span><span class="sysinfo-value sysinfo-healthy">Online</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Banner -->
+        <div class="error-banner" id="errorBanner" style="display:none;">
+            <div class="error-content">
+                <div class="error-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+                <div class="error-text"><strong>Falha na comunicação</strong><p id="errorMessage">—</p></div>
+                <button class="error-dismiss" onclick="fecharBannerErro()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="dashboard-footer">
+            <span>RedHosting + JD Node</span>
+            <span class="footer-sep">&bull;</span>
+            <span>Projeto UniEVANGÉLICA</span>
+            <span class="footer-sep">&bull;</span>
+            <span>Flask + Chart.js + Inter Font</span>
+            <span class="footer-sep">&bull;</span>
+            <span id="footerUpdate">—</span>
+        </footer>
+    </main>
+
+    <script src="{{ url_for('static', filename='script.js') }}" defer></script>
+</body>
+</html>
