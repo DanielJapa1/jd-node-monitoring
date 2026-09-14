@@ -1,29 +1,7 @@
 /* ==========================================================================
    style.css v2.1 — JD Node & Infrastructure Dashboard
-   ==========================================================================
-   Tema: Premium Dark Mode SaaS | Paleta: Roxo + Azul + Rosa
-   Fonte: Inter (Google Fonts)
-   
-   Índice:
-   1.  VARIÁVEIS CSS / DESIGN TOKENS
-   2.  RESET / GLOBAL
-   3.  BACKGROUND FX (orbs, grid)
-   4.  SIDEBAR
-   5.  MAIN HEADER
-   6.  KPI CARDS
-   7.  CHARTS
-   8.  NODES LIST
-   9.  ERROR BANNER
-   10. FOOTER
-   11. SKELETON LOADING
-   12. ANIMAÇÕES
-   13. RESPONSIVIDADE
    ========================================================================== */
 
-
-/* ==========================================================================
-   1. VARIÁVEIS CSS / DESIGN TOKENS
-   ========================================================================== */
 :root {
     /* Background */
     --bg-primary: #15121A;
@@ -77,10 +55,6 @@
     --transition-long: 300ms ease;
 }
 
-
-/* ==========================================================================
-   2. RESET / GLOBAL
-   ========================================================================== */
 *, *::before, *::after {
     margin: 0; padding: 0; box-sizing: border-box;
 }
@@ -98,7 +72,6 @@ body {
     overflow-x: hidden;
 }
 
-/* Scrollbar personalizada */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--bg-elevated); border-radius: 3px; }
@@ -108,10 +81,6 @@ a { text-decoration: none; color: inherit; }
 button { cursor: pointer; font-family: inherit; }
 img { max-width: 100%; display: block; }
 
-
-/* ==========================================================================
-   3. BACKGROUND FX
-   ========================================================================== */
 .bg-layer {
     position: fixed;
     inset: 0;
@@ -161,10 +130,6 @@ img { max-width: 100%; display: block; }
     opacity: 0.4;
 }
 
-
-/* ==========================================================================
-   4. SIDEBAR
-   ========================================================================== */
 .sidebar {
     position: fixed;
     top: 0; left: 0;
@@ -194,7 +159,6 @@ img { max-width: 100%; display: block; }
     overflow-y: auto;
 }
 
-/* Logo */
 .sidebar-logo {
     display: flex;
     align-items: center;
@@ -236,7 +200,6 @@ img { max-width: 100%; display: block; }
     text-transform: uppercase;
 }
 
-/* Navegação */
 .nav-label {
     font-size: 0.65rem;
     font-weight: 600;
@@ -316,7 +279,6 @@ img { max-width: 100%; display: block; }
     text-align: center;
 }
 
-/* Sidebar footer */
 .sidebar-footer {
     margin-top: auto;
     padding: 16px 10px 8px;
@@ -346,10 +308,6 @@ img { max-width: 100%; display: block; }
     opacity: 0.5;
 }
 
-
-/* ==========================================================================
-   5. MAIN HEADER
-   ========================================================================== */
 .main-content {
     margin-left: var(--sidebar-width);
     flex: 1;
@@ -518,10 +476,6 @@ img { max-width: 100%; display: block; }
     transform: rotate(360deg);
 }
 
-
-/* ==========================================================================
-   6. KPI CARDS
-   ========================================================================== */
 .dashboard-content {
     padding: 24px 32px 32px;
     flex: 1;
@@ -631,10 +585,6 @@ img { max-width: 100%; display: block; }
     opacity: 0.6;
 }
 
-
-/* ==========================================================================
-   7. CHARTS
-   ========================================================================== */
 .charts-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -691,10 +641,6 @@ img { max-width: 100%; display: block; }
     height: 100% !important;
 }
 
-
-/* ==========================================================================
-   8. NODES LIST
-   ========================================================================== */
 .nodes-section {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
@@ -754,7 +700,6 @@ img { max-width: 100%; display: block; }
     animation: pulseDot 2s ease-in-out infinite;
 }
 
-/* Node row */
 .nodes-list {
     display: flex;
     flex-direction: column;
@@ -777,7 +722,6 @@ img { max-width: 100%; display: block; }
     background: var(--bg-card-hover);
 }
 
-/* Loading row */
 .node-row-loading {
     display: flex;
     justify-content: center;
@@ -795,7 +739,6 @@ img { max-width: 100%; display: block; }
     animation: spin 0.8s linear infinite;
 }
 
-/* Node info */
 .node-info {
     display: flex;
     flex-direction: column;
@@ -817,7 +760,6 @@ img { max-width: 100%; display: block; }
     max-width: 200px;
 }
 
-/* Status badge */
 .node-status-badge {
     display: inline-flex;
     align-items: center;
@@ -846,7 +788,6 @@ img { max-width: 100%; display: block; }
     border: 1px solid rgba(251, 113, 133, 0.15);
 }
 
-/* Progress bars */
 .node-progress {
     display: flex;
     flex-direction: column;
@@ -906,10 +847,6 @@ img { max-width: 100%; display: block; }
     color: var(--text-muted);
 }
 
-
-/* ==========================================================================
-   9. ERROR BANNER
-   ========================================================================== */
 .error-banner {
     padding: 0 32px;
     margin-bottom: 20px;
@@ -959,10 +896,6 @@ img { max-width: 100%; display: block; }
     background: rgba(251, 113, 133, 0.15);
 }
 
-
-/* ==========================================================================
-   10. FOOTER
-   ========================================================================== */
 .dashboard-footer {
     display: flex;
     align-items: center;
@@ -977,10 +910,6 @@ img { max-width: 100%; display: block; }
 
 .footer-sep { opacity: 0.4; }
 
-
-/* ==========================================================================
-   11. SKELETON LOADING
-   ========================================================================== */
 .skeleton-loader {
     display: flex;
     flex-direction: column;
@@ -1044,10 +973,6 @@ img { max-width: 100%; display: block; }
     overflow: hidden;
 }
 
-
-/* ==========================================================================
-   12. ANIMAÇÕES
-   ========================================================================== */
 @keyframes orbFloat {
     0% { transform: translate(0, 0) scale(1); }
     50% { transform: translate(30px, -20px) scale(1.05); }
@@ -1068,7 +993,6 @@ img { max-width: 100%; display: block; }
     100% { transform: translateX(100%); }
 }
 
-/* Fade in para linhas da lista */
 .node-row {
     animation: fadeInUp 0.35s ease both;
 }
@@ -1090,17 +1014,10 @@ img { max-width: 100%; display: block; }
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Rotação suave no ícone refresh ao carregar */
 .header-btn.loading .refresh-icon {
     animation: spin 0.8s linear infinite;
 }
 
-
-/* ==========================================================================
-   13. RESPONSIVIDADE
-   ========================================================================== */
-
-/* Tablet (1024px) */
 @media (max-width: 1024px) {
     .kpi-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -1133,7 +1050,6 @@ img { max-width: 100%; display: block; }
     .node-desc { display: none; }
 }
 
-/* Mobile (768px) */
 @media (max-width: 768px) {
     .sidebar {
         transform: translateX(-100%);
@@ -1200,7 +1116,6 @@ img { max-width: 100%; display: block; }
     }
 }
 
-/* Mobile pequeno (480px) */
 @media (max-width: 480px) {
     .kpi-grid {
         grid-template-columns: 1fr;
@@ -1234,9 +1149,6 @@ img { max-width: 100%; display: block; }
     }
 }
 
-/* ==========================================================================
-   14. PAGE PANELS (Dashboard, Alertas, Logs, Configurações)
-   ========================================================================== */
 .page-panel {
     display: none;
 }
@@ -1277,10 +1189,6 @@ img { max-width: 100%; display: block; }
     border-color: var(--border-hover);
 }
 
-
-/* ==========================================================================
-   15. ALERTAS
-   ========================================================================== */
 .alerts-container {
     display: flex;
     flex-direction: column;
@@ -1379,10 +1287,6 @@ img { max-width: 100%; display: block; }
     border: 1px solid rgba(96, 165, 250, 0.15);
 }
 
-
-/* ==========================================================================
-   16. LOGS
-   ========================================================================== */
 .logs-container {
     display: flex;
     flex-direction: column;
@@ -1449,10 +1353,6 @@ img { max-width: 100%; display: block; }
     font-weight: 500;
 }
 
-
-/* ==========================================================================
-   17. CONFIGURAÇÕES / SETTINGS
-   ========================================================================== */
 .settings-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1491,7 +1391,6 @@ img { max-width: 100%; display: block; }
     line-height: 1.5;
 }
 
-/* Theme toggle */
 .theme-toggle-wrapper {
     display: flex;
     gap: 8px;
@@ -1522,7 +1421,6 @@ img { max-width: 100%; display: block; }
     color: var(--purple-light);
 }
 
-/* About */
 .about-content {
     margin-top: 12px;
 }
@@ -1568,7 +1466,6 @@ img { max-width: 100%; display: block; }
     border: 1px solid rgba(167, 139, 250, 0.12);
 }
 
-/* System info */
 .sysinfo-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1595,10 +1492,6 @@ img { max-width: 100%; display: block; }
     color: var(--green);
 }
 
-
-/* ==========================================================================
-   18. LIGHT THEME
-   ========================================================================== */
 [data-theme="light"] {
     --bg-primary: #f5f3f7;
     --bg-secondary: #f0edf4;
@@ -1652,10 +1545,6 @@ img { max-width: 100%; display: block; }
     background: rgba(250, 204, 21, 0.08);
 }
 
-
-/* ==========================================================================
-   Responsividade para novos componentes
-   ========================================================================== */
 @media (max-width: 768px) {
     .settings-grid {
         grid-template-columns: 1fr;
@@ -1680,4 +1569,4 @@ img { max-width: 100%; display: block; }
     .theme-toggle-wrapper {
         flex-direction: column;
     }
-}/* Atualizacao de componentes visuais */ 
+}

@@ -1,103 +1,24 @@
-"""
-=============================================================================
- app.py - Servidor Flask - Painel de Monitoramento RedHosting
-=============================================================================
- Este arquivo é o coração do backend. Ele faz duas coisas principais:
- 
- 1. Proxy da API externa: O Flask faz a requisição HTTP para a API da
-    RedHosting (https://api-status.redhosting.com.br/api/status) no lado
-    do servidor, evitando assim os problemas de CORS.
- 
- 2. Transformação dos dados: A API externa retorna um formato complexo
-    (monitors com latency/uptime como objetos). O backend TRANSFORMA esses
-    dados para um formato simplificado que o frontend entende.
- 
-    ESTRATÉGIA DE FALHA (Resiliência):
-    - Se a API externa estiver indisponível, o servidor NÃO quebra.
-    - Retorna dados de demonstração (fallback) com mensagem de erro.
- 
-    TRATAMENTO DE TIMEOUT:
-    - A requisição tem timeout de 10 segundos para não travar o dashboard.
- 
- =============================================================================
-"""
-
-# =============================================================================
-# BIBLIOTECAS NECESSÁRIAS
-# pip install flask requests
-# =============================================================================
 from flask import Flask, jsonify, render_template
 import requests
 from datetime import datetime, timezone
 import logging
 
-# -----------------------------------------------------------------------------
-# CONFIGURAÇÃO DE LOGGING
-# -----------------------------------------------------------------------------
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
     datefmt="%H:%M:%S",
 )
 
-# -----------------------------------------------------------------------------
-# INICIALIZAÇÃO DO FLASK
-# -----------------------------------------------------------------------------
+
 app = Flask(
     __name__,
     template_folder="templates",
     static_folder="static",
 )
 
-# -----------------------------------------------------------------------------
-# CONSTANTES DA APLICAÇÃO
-# -----------------------------------------------------------------------------
 API_EXTERNA = "https://api-status.redhosting.com.br/api/status"
 TIMEOUT_SEGUNDOS = 10
 
-
-# =============================================================================
-# FUNÇÃO: transformar_dados(dados_brutos)
-# =============================================================================
-# A API externa retorna os dados neste formato:
-#
-#   {
-#     "data": {
-#       "monitors": [
-#         {
-#           "name": "Site RedHosting",
-#           "description": "...",
-#           "status": "operational",          ← string legível
-#           "statusLabel": "Operacional",     ← rótulo em português
-#           "latency": {                      ← objeto, não número!
-#             "avg": 32.98, "min": 14.78, "max": 1064.34, "samples": 1416
-#           },
-#           "uptime": {                       ← objeto, não número!
-#             "24h": 100, "7d": 99.99, "30d": 99.98
-#           },
-#           "lastCheckedAt": "..."
-#         }
-#       ],
-#       "groups": [...],
-#       "incidents": [...],
-#       "meta": { "generatedAt": "..." }
-#     }
-#   }
-#
-# O frontend espera este formato simplificado:
-#
-#   {
-#     "summary": { "total": 11, "operational": 11, "degraded": 0,
-#                  "failed": 0, "uptime": 99.9 },
-#     "services": [
-#       { "name": "...", "description": "...",
-#         "status": "operational", "latency": 32.98, "uptime": 100 }
-#     ],
-#     "ultima_consulta": "..."
-#   }
-#
-# Esta função faz essa transformação!
-# =============================================================================
 def transformar_dados(dados_brutos):
     """
     Transforma o formato complexo da API externa no formato simplificado
@@ -113,17 +34,10 @@ def transformar_dados(dados_brutos):
     if not timestamp:
         timestamp = datetime.now(timezone.utc).isoformat()
 
-    # ===============================================================
-    # EXTRAI A LISTA DE MONITORS
-    # ===============================================================
-    # A API real retorna os monitores dentro de data.monitors
-    # ===============================================================
+
     dados_internos = dados_brutos.get("data", {})
     monitors = dados_internos.get("monitors", [])
 
-    # ===============================================================
-    # VARIÁVEIS PARA AGREGAR AS MÉTRICAS
-    # ===============================================================
     total = len(monitors)
     operacionais = 0
     degradados = 0
@@ -131,12 +45,9 @@ def transformar_dados(dados_brutos):
     soma_uptime = 0.0
     servicos_transformados = []
 
-    # Status que a API considera como "operational"
     STATUS_OK = {"operational", "operacional", "ok", "up", "online", "none"}
 
-    # ===============================================================
-    # LOOP DE TRANSFORMAÇÃO: percorre cada monitor e converte
-    # ===============================================================
+    
     for monitor in monitors:
         # --- Nome e descrição ---
         nome = monitor.get("name", "Serviço sem nome")
@@ -185,17 +96,13 @@ def transformar_dados(dados_brutos):
             "lastCheckedAt": ultima_verificacao,
         })
 
-    # ===============================================================
-    # CALCULA O UPTIME MÉDIO GERAL
-    # ===============================================================
+   
     if operacionais > 0 and soma_uptime > 0:
         uptime_medio = round(soma_uptime / total, 2)
     else:
         uptime_medio = 0.0
 
-    # ===============================================================
-    # MONTA O OBJETO DE RESUMO (SUMMARY)
-    # ===============================================================
+
     resumo = {
         "total": total,
         "operational": operacionais,
@@ -204,9 +111,7 @@ def transformar_dados(dados_brutos):
         "uptime": uptime_medio,
     }
 
-    # ===============================================================
-    # RETORNA OS DADOS NO FORMATO QUE O FRONTEND ESPERA
-    # ===============================================================
+  
     return {
         "summary": resumo,
         "services": servicos_transformados,
@@ -219,12 +124,7 @@ def transformar_dados(dados_brutos):
     }
 
 
-# =============================================================================
-# FUNÇÃO: gerar_dados_demo()
-# =============================================================================
-# Gera dados simulados para quando a API externa estiver indisponível.
-# Isso garante que o dashboard nunca fique vazio.
-# =============================================================================
+
 def gerar_dados_demo():
     """Retorna dados simulados para modo demonstração."""
     agora = datetime.now(timezone.utc).isoformat()
@@ -298,13 +198,6 @@ def gerar_dados_demo():
     }
 
 
-# =============================================================================
-# FUNÇÃO: consultar_api_externa()
-# =============================================================================
-# Faz a requisição GET para a API de status da RedHosting.
-# Agora com TRANSFORMAÇÃO: converte o formato complexo da API para o
-# formato simplificado que o frontend consegue renderizar.
-# =============================================================================
 def consultar_api_externa():
     """
     Consulta a API de status da RedHosting e retorna os dados TRANSFORMADOS.
@@ -330,9 +223,7 @@ def consultar_api_externa():
         # Adiciona timestamp aos dados brutos
         dados_brutos["ultima_consulta"] = datetime.now(timezone.utc).isoformat()
 
-        # ===============================================================
-        # 🎯 TRANSFORMAÇÃO: converte para o formato do frontend
-        # ===============================================================
+       
         dados_transformados = transformar_dados(dados_brutos)
 
         return dados_transformados
@@ -365,22 +256,12 @@ def consultar_api_externa():
         return dados_demo
 
 
-# =============================================================================
-# ROTA PRINCIPAL - Página do Dashboard (/)
-# =============================================================================
 @app.route("/")
 def index():
     """Renderiza a página principal do dashboard."""
     return render_template("index.html")
 
 
-# =============================================================================
-# ROTA DA API INTERNA (/api/dados)
-# =============================================================================
-# O frontend consome esta rota via JavaScript (fetch API).
-# O Flask chama consultar_api_externa() que já transforma os dados
-# para o formato correto.
-# =============================================================================
 @app.route("/api/dados")
 def api_dados():
     """
@@ -390,9 +271,7 @@ def api_dados():
     return jsonify(dados)
 
 
-# =============================================================================
-# ROTA DE HEALTH CHECK (/api/health)
-# =============================================================================
+
 @app.route("/api/health")
 def health_check():
     """Rota simples para verificar se o servidor está online."""
@@ -403,9 +282,6 @@ def health_check():
     })
 
 
-# =============================================================================
-# PONTO DE ENTRADA PRINCIPAL
-# =============================================================================
 if __name__ == "__main__":
     print("=" * 60)
     print("  🖥️  RedHosting - Painel de Monitoramento de Status")
