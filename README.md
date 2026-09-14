@@ -1,4 +1,4 @@
-# \# 🖥️ JD Node \& Infrastructure Monitoring
+# \#  JD Node \& Infrastructure Monitoring
 
 # 
 
@@ -10,7 +10,7 @@
 
 # 
 
-# \## 🚀 Funcionalidades (MVP)
+# \##  Funcionalidades (MVP)
 
 # 
 
